@@ -109,6 +109,8 @@ class Configuration
 			$this->loadFromDirectory($directory);
 		}
 
+		$this->collections = $this->parser->all();
+
 		if ($cache_path) {
 			if (is_file($cache_path) && !is_writable($cache_path)) {
 				//
@@ -150,28 +152,14 @@ class Configuration
 		$sub_directories = glob($directory . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
 
 		foreach ($target_files as $target_file) {
-			$collection_data = $this->parser->parse(
+			$this->parser->parse(
 				file_get_contents($target_file),
-				TRUE
+				trim(sprintf(
+					'%s' . DIRECTORY_SEPARATOR . '%s',
+					str_replace($base, '', $directory),
+					pathinfo($target_file, PATHINFO_FILENAME)
+				), '/\\')
 			);
-
-			$collection_path = trim(sprintf(
-				'%s' . DIRECTORY_SEPARATOR . '%s',
-				str_replace($base, '', $directory),
-				pathinfo($target_file, PATHINFO_FILENAME)
-			), '/\\');
-
-			if (isset($this->collections[$collection_path])) {
-				$this->collections[$collection_path]->setArray(
-					array_replace_recursive(
-						$this->collections[$collection_path]->get(),
-						$collection_data->get()
-					)
-				);
-
-			} else {
-				$this->collections[$collection_path] = $collection_data;
-			}
 
 			$this->stale = TRUE;
 		}
