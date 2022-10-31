@@ -2,6 +2,7 @@
 
 namespace Hiraeth;
 
+use Exception;
 use SlashTrace\EventHandler\DebugHandler;
 
 /**
@@ -34,7 +35,7 @@ class DebuggingHandler extends DebugHandler
 	 * Exception handler
 	 *
 	 * @access public
-	 * @var Exception $exception The exception to be handled
+	 * @param Exception $exception The exception to be handled
 	 * @return int
 	 */
 	public function handleException($exception)
@@ -42,5 +43,7 @@ class DebuggingHandler extends DebugHandler
 		if ($this->app->isDebugging()) {
 			return parent::handleException($exception);
 		}
+
+		return 0;
 	}
 }

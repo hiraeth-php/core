@@ -23,7 +23,7 @@ interface Provider
 	 * Prepare the instance.
 	 *
 	 * @access public
-	 * @var object $instance The unprepared instance of the object
+	 * @param object $instance The unprepared instance of the object
 	 * @param Application $app The application instance for which the provider operates
 	 * @return object The prepared instance
 	 */

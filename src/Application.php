@@ -46,7 +46,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * A list of interface and/or class aliases
 	 *
 	 * @access protected
-	 * @var array
+	 * @var array<string, string>
 	 */
 	protected $aliases = array();
 
@@ -70,10 +70,10 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 * A dot collection containing environment data
+	 * A flattened environment collection
 	 *
 	 * @access protected
-	 * @var array
+	 * @var array<string, string>
 	 */
 	protected $environment = array();
 
@@ -126,16 +126,16 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * Absolute path to the application root
 	 *
 	 * @access protected
-	 * @var string|null
+	 * @var string
 	 */
-	protected $root = NULL;
+	protected $root = '/';
 
 
 	/**
 	 * Shared boot / application state
 	 *
 	 * @access protected
-	 * @var object|null
+	 * @var State|null
 	 */
 	protected $state = NULL;
 
@@ -161,9 +161,9 @@ class Application extends AbstractLogger implements ContainerInterface
 	public function __construct(string $root_path, string $env_file = '.env', string $release_file = 'local/.release')
 	{
 		$this->root   = $root_path;
-		$this->state  = new State();
 		$this->broker = new Broker();
 		$this->tracer = new SlashTrace();
+		$this->state  = new State($this);
 		$this->parser = new Jin\Parser([
 			'app' => $this
 		], [
@@ -180,7 +180,7 @@ class Application extends AbstractLogger implements ContainerInterface
 		$this->tracer->prependHandler(new ProductionHandler($this));
 		$this->tracer->register();
 
-		if (!$this->hasDirectory(NULL)) {
+		if (!$this->hasDirectory($this->root)) {
 			throw new RuntimeException(sprintf(
 				'Invalid root path "%s" specified, not a directory.',
 				$this->root
@@ -188,14 +188,18 @@ class Application extends AbstractLogger implements ContainerInterface
 		}
 
 		if ($this->hasFile($release_file)) {
-			$this->release = $this->parser->parse(file_get_contents($this->getFile($release_file)));
+			$this->release = $this->parser->parse(
+				file_get_contents($this->getFile($release_file)) ?: ''
+			);
+
 		} else {
 			$this->release = $this->parser->parse('NAME = Unknown Release');
+
 		}
 
 		if ($this->hasFile($env_file)) {
 			$this->environment = $_ENV = $_ENV + $this->parser
-				->parse(file_get_contents($this->getFile($env_file)))
+				->parse(file_get_contents($this->getFile($env_file)) ?: '')
 				->flatten('_');
 
 			foreach ($this->environment as $name => $value) {
@@ -209,15 +213,15 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 *
+	 * Get the application state
 	 */
-	public function __invoke() {
+	public function __invoke(): State {
 		return $this->state;
 	}
 
 
 	/**
-	 *
+	 * @return void
 	 */
 	public function exec(Closure $post_boot = NULL)
 	{
@@ -310,7 +314,8 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 *
+	 * @param string $alias The alias of the dependency to make (class name or interface name usually)
+	 * @param array<string, mixed> $args Optional named constructor arguments
 	 */
 	public function get($alias, $args = array())
 	{
@@ -319,12 +324,26 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 * Get configuration data from the a configuration collection
+	 * Get configuration data from all configs with a key
 	 *
 	 * @access public
-	 * @var string $path The collection path from which to fetch data
-	 * @var string $key The value to retrieve from the collection (dot separated)
-	 * @var mixed $default The default value, should the data not exist
+	 * @param string $key The value to retrieve from the collection (dot separated)
+	 * @param mixed $default The default value, should the data not exist
+	 * @return array<string, mixed> The values as retrieved, keyed by collection(s), or defaults
+	 */
+	public function getAllConfigs(string $key, $default = NULL): array
+	{
+		return $this->getConfig('*', $key, $default);
+	}
+
+
+	/**
+	 * Get configuration data from a configuration collection
+	 *
+	 * @access public
+	 * @param string $path The collection path from which to fetch data
+	 * @param string $key The value to retrieve from the collection (dot separated)
+	 * @param mixed $default The default value, should the data not exist
 	 * @return mixed The value/array of values as retrieved from collection(s), or default
 	 */
 	public function getConfig(string $path, string $key, $default = NULL)
@@ -361,8 +380,8 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * Get a directory for an app relative path
 	 *
 	 * @access public
-	 * @var string $path The relative path for the directory, e.g. 'writable/public'
-	 * @var bool $create Whether or not the directory should be created if it does not exist
+	 * @param string $path The relative path for the directory, e.g. 'writable/public'
+	 * @param bool $create Whether or not the directory should be created if it does not exist
 	 * @return SplFileInfo An SplFileInfo object referencing the directory
 	 */
 	public function getDirectory(string $path = NULL, bool $create = FALSE): SplFileInfo
@@ -396,8 +415,8 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * array.
 	 *
 	 * @access public
-	 * @var string $name The name of the environment variable
-	 * @var mixed $default The default data, should the data not exist in the environment
+	 * @param string $name The name of the environment variable
+	 * @param mixed $default The default data, should the data not exist in the environment
 	 * @return mixed The value as retrieved from the environment, or default
 	 */
 	public function getEnvironment(string $name = NULL, $default = NULL)
@@ -424,8 +443,8 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * Get a file for an app relative path
 	 *
 	 * @access public
-	 * @var string $path The relative path for the file, e.g. 'writable/public/logo.jpg'
-	 * @var bool $create Whether or not the file should be created if it does not exist
+	 * @param string $path The relative path for the file, e.g. 'writable/public/logo.jpg'
+	 * @param bool $create Whether or not the file should be created if it does not exist
 	 * @return SplFileInfo An SplFileInfo object referencing the directory
 	 */
 	public function getFile(string $path, bool $create = FALSE): SplFileInfo
@@ -486,9 +505,13 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
+	 * Get release information from the .release file
 	 *
+	 * @param string $name The name of the specific data to get (optional)
+	 * @param mixed $default The default value if that data cannot be found
+	 * @return mixed The release data stored in the .release file
 	 */
-	public function getRelease($name = NULL, $default = NULL)
+	public function getRelease(string $name = NULL, $default = NULL)
 	{
 		return $this->release->get($name, $default);
 	}
@@ -504,9 +527,10 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 *
+	 * @param string|SplFileInfo $path An absolute or applicaiton relative path or file info object
+	 * @return bool Whether or not the provided path is readable and is a directory
 	 */
-	public function hasDirectory($path)
+	public function hasDirectory($path): bool
 	{
 		if (!$path || !preg_match(static::REGEX_ABS_PATH, $path)) {
 			$path = $this->root . DIRECTORY_SEPARATOR . $path;
@@ -517,9 +541,10 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 *
+	 * @param string|SplFileInfo $path An absolute or applicaiton relative path or file info object
+	 * @return bool Whether or not the provided path is readabiel and is a file
 	 */
-	public function hasFile($path)
+	public function hasFile($path): bool
 	{
 		if (!$path || !preg_match(static::REGEX_ABS_PATH, $path)) {
 			$path = $this->root . DIRECTORY_SEPARATOR . $path;
@@ -530,9 +555,9 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 *
+	 * @return bool Whether or not the application request seems to be via CLI
 	 */
-	public function isCLI()
+	public function isCLI(): bool
 	{
 		return (
 			defined('STDIN')
@@ -560,7 +585,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 *
 	 * @param mixed $level
 	 * @param string $message
-	 * @param array $context
+	 * @param mixed[] $context
 	 * @return void
 	 */
 	public function log($level, $message, array $context = array()): void
@@ -572,9 +597,10 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 *
+	 * @param string $message
+	 * @param mixed[] $context
 	 */
-	public function record($message, array $context = array()): Application
+	public function record(string $message, array $context = array()): Application
 	{
 		$this->tracer->recordBreadcrumb($message, $context);
 
@@ -583,7 +609,9 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 *
+	 * @param string|callable $target A callable target to execute
+	 * @param array<string, mixed> $parameters A list of name parameters for the callable
+	 * @return mixed The return result of executing the target
 	 */
 	public function run($target, array $parameters = array())
 	{

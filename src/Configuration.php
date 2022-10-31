@@ -2,8 +2,9 @@
 
 namespace Hiraeth;
 
-use Dotink\Jin;
+use SplFileInfo;
 use RuntimeException;
+use Dotink\Jin;
 
 /**
  *
@@ -11,25 +12,25 @@ use RuntimeException;
 class Configuration
 {
 	/**
-	 *
+	 * @var SplFileInfo|null
 	 */
 	protected $cacheDir = NULL;
 
 
 	/**
-	 *
+	 * @var array<string, Jin\Collection>
 	 */
 	protected $collections = array();
 
 
 	/**
-	 *
+	 * @var Jin\Parser|null
 	 */
 	protected $parser = NULL;
 
 
 	/**
-	 *
+	 * @var bool
 	 */
 	protected $stale = FALSE;
 
@@ -37,7 +38,7 @@ class Configuration
 	/**
 	 *
 	 */
-	public function __construct(Jin\Parser $parser, $cache_dir = NULL)
+	public function __construct(Jin\Parser $parser, SplFileInfo $cache_dir = NULL)
 	{
 		$this->parser   = $parser;
 		$this->cacheDir = $cache_dir;
@@ -45,9 +46,12 @@ class Configuration
 
 
 	/**
-	 *
+	 * @param string $path
+	 * @param string $key
+	 * @param mixed $default
+	 * @return mixed
 	 */
-	public function get($path, $key, $default)
+	public function get(string $path, string $key, $default)
 	{
 		return isset($this->collections[$path])
 		 	? $this->collections[$path]->get($key, $default)
@@ -56,7 +60,8 @@ class Configuration
 
 
 	/**
-	 *
+	 * @param string $path
+	 * @return Jin\Collection|null
 	 */
 	public function getCollection($path): ?Jin\Collection
 	{
@@ -67,7 +72,7 @@ class Configuration
 
 
 	/**
-	 *
+	 * @return string[]
 	 */
 	public function getCollectionPaths(): array
 	{
@@ -76,7 +81,9 @@ class Configuration
 
 
 	/**
-	 *
+	 * @param string|SplFileInfo $directory
+	 * @param string $source
+	 * @return self
 	 */
 	public function load($directory, string $source = NULL)
 	{
@@ -97,7 +104,7 @@ class Configuration
 			if (is_array($data)) {
 				$this->collections = $data;
 
-				return TRUE;
+				return $this;
 			}
 		}
 
@@ -129,11 +136,15 @@ class Configuration
 				));
 			}
 		}
+
+		return $this;
 	}
 
 
 	/**
-	 *
+	 * @param string|SplFileInfo $directory
+	 * @param string|SplFileInfo $base
+	 * @return self
 	 */
 	protected function loadFromDirectory($directory, $base = NULL)
 	{
@@ -151,34 +162,27 @@ class Configuration
 		$target_files    = glob($directory . DIRECTORY_SEPARATOR . '*.jin');
 		$sub_directories = glob($directory . DIRECTORY_SEPARATOR . '*', GLOB_ONLYDIR);
 
-		foreach ($target_files as $target_file) {
-			$this->parser->parse(
-				file_get_contents($target_file),
-				trim(sprintf(
-					'%s' . DIRECTORY_SEPARATOR . '%s',
-					str_replace($base, '', $directory),
-					pathinfo($target_file, PATHINFO_FILENAME)
-				), '/\\')
-			);
+		if ($target_files) {
+			foreach ($target_files as $target_file) {
+				$this->parser->parse(
+					file_get_contents($target_file) ?: '',
+					trim(sprintf(
+						'%s' . DIRECTORY_SEPARATOR . '%s',
+						str_replace($base, '', $directory),
+						pathinfo($target_file, PATHINFO_FILENAME)
+					), '/\\')
+				);
 
-			$this->stale = TRUE;
+				$this->stale = TRUE;
+			}
 		}
 
-		foreach ($sub_directories as $sub_directory) {
-			$this->loadFromDirectory($sub_directory, $base);
+		if ($sub_directories) {
+			foreach ($sub_directories as $sub_directory) {
+				$this->loadFromDirectory($sub_directory, $base);
+			}
 		}
 
-		return TRUE;
-	}
-
-
-	/**
-	 *
-	 */
-	protected function save($cache_path)
-	{
-		if (!$cache_path || !$this->stale) {
-			return;
-		}
+		return $this;
 	}
 }

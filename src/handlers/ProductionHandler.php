@@ -43,7 +43,7 @@ class ProductionHandler implements EventHandler
 	/**
 	 * The information of the user of the application, included in error logging
 	 *
-	 * @var array
+	 * @var mixed[] Application user information
 	 */
 	protected $user = array();
 
@@ -52,7 +52,7 @@ class ProductionHandler implements EventHandler
 	 * Instantiate a Production Handler
 	 *
 	 * @access public
-	 * @var Application $app The application instance for proxying log calls
+	 * @param Application $app The application instance for proxying log calls
 	 * @return void
 	 */
 	public function __construct(Application $app)
@@ -65,7 +65,7 @@ class ProductionHandler implements EventHandler
 	 * Exception handler
 	 *
 	 * @access public
-	 * @var Exception $exception The exception to be handled
+	 * @param Exception $exception The exception to be handled
 	 * @return int
 	 */
 	public function handleException($exception)
@@ -89,20 +89,22 @@ class ProductionHandler implements EventHandler
 				exit(500);
 			}
 		}
+
+		return 0;
 	}
 
 
 	/**
-	 * Record a breadcrumb
+	 * Record a breadcrumb as a debug line entry (in debug mode it's a breadcrumb)
 	 *
 	 * @access public
-	 * @var string $title The title for the breadcrumb
-	 * @var array $data Additional contextual data that is relevant
+	 * @param string $message The message for the breadcrumb
+	 * @param mixed[] $context Additional contextual data that is relevant
 	 * @return void
 	 */
-	public function recordBreadcrumb($title, array $data = [])
+	public function recordBreadcrumb($message, array $context = [])
 	{
-		$this->app->debug($title, $data);
+		$this->app->debug($message, $context);
 	}
 
 
@@ -110,7 +112,7 @@ class ProductionHandler implements EventHandler
 	 * Set the application path
 	 *
 	 * @access public
-	 * @var string $path The path to the application
+	 * @param string $path The path to the application
 	 * @return void
 	 */
 	public function setApplicationPath($path)
@@ -123,7 +125,7 @@ class ProductionHandler implements EventHandler
 	 * Set the application release
 	 *
 	 * @access public
-	 * @var string $release The release of the application
+	 * @param string $release The release of the application
 	 * @return void
 	 */
 	public function setRelease($release)
@@ -136,7 +138,7 @@ class ProductionHandler implements EventHandler
 	 * Set the application information for the user
 	 *
 	 * @access public
-	 * @var User $user The slashtrace user context
+	 * @param User $user The slashtrace user context
 	 * @return void
 	 */
 	public function setUser(User $user)
