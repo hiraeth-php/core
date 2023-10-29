@@ -21,7 +21,8 @@
         "defuse/php-encryption": "^2.2"
     },
     "require-dev": {
-        "phpstan/phpstan": "^1.0"
+        "phpstan/phpstan": "^1.0",
+	"phpunit/phpunit": "^8.5"
     },
     "autoload": {
         "classmap": ["src/"]
@@ -32,6 +33,11 @@
             "hiraeth/app": {
                 "config": ""
             }
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "imarc/opus": true
         }
     }
 }
