@@ -319,6 +319,20 @@ class Application extends AbstractLogger implements ContainerInterface
 	 */
 	public function get($alias, $args = array())
 	{
+		$args = array_combine(
+			array_map(
+				function($key) {
+					if (!is_numeric($key)) {
+						$key = ':' . $key;
+					}
+
+					return $key;
+				},
+				array_keys($args)
+			),
+			array_values($args)
+		);
+
 		return $this->broker->make($alias, $args);
 	}
 
