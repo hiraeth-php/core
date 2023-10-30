@@ -532,9 +532,9 @@ class Application extends AbstractLogger implements ContainerInterface
 
 
 	/**
-	 *
+	 * {@inheritDoc}
 	 */
-	public function has($alias)
+	public function has(string $alias): bool
 	{
 		return class_exists($alias) || $this->broker->has($alias);
 	}

@@ -22,7 +22,7 @@ class Broker extends Injector implements ContainerInterface
 	/**
 	 *
 	 */
-	public function has($alias)
+	public function has(string $alias): bool
 	{
 		return isset($this->inspect(NULL, Broker::I_ALIASES)[Broker::I_ALIASES][strtolower($alias)]);
 	}
