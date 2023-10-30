@@ -228,14 +228,13 @@ class Application extends AbstractLogger implements ContainerInterface
 		ini_set('display_errors', 0);
 		ini_set('display_startup_errors', 0);
 
-		$bootables = array();
-
-		$this->config = $this->get(Configuration::class, [
-			':parser'    => $this->parser,
-			':cache_dir' => $this->getEnvironment('CACHING', TRUE)
+		$bootables    = array();
+		$this->config = new Configuration(
+			$this->parser,
+			$this->getEnvironment('CACHING', TRUE)
 				? $this->getDirectory('storage/cache', TRUE)
 				: NULL
-		]);
+		);
 
 		$this->config->load(
 			$this->getEnvironment('CONFIG_DIR', $this->getDirectory('config')),
@@ -288,7 +287,7 @@ class Application extends AbstractLogger implements ContainerInterface
 		}
 
 		while($provider = array_shift($bootables)) {
-			$this->broker->execute($provider, [$this->state]);
+			$this->broker->execute($provider, [$this->state, $this]);
 		}
 
 		if ($this->has(LoggerInterface::class)) {
