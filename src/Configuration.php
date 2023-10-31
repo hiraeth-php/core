@@ -89,7 +89,7 @@ class Configuration
 	{
 		$cache_hash = md5($directory);
 		$cache_path = $this->cacheDir
-			? $this->cacheDir . '/' . $cache_hash
+			? sprintf('%s/%s.config', $this->cacheDir, $cache_hash)
 			: NULL;
 
 		if ($cache_path && is_file($cache_path)) {
