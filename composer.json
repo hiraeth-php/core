@@ -13,7 +13,7 @@
     ],
     "require": {
         "hiraeth/app": "^3.0",
-        "psr/log": "^3.0",
+        "psr/log": "^1.0",
         "psr/container": "^2.0",
         "dotink/jin": "^4.0",
         "dotink/slashtrace": "^2.0",
