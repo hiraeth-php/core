@@ -12,20 +12,23 @@
         }
     ],
     "require": {
-	"hiraeth/app": "^3.0",
-        "psr/log": "^1.1",
+        "hiraeth/app": "^3.0",
+        "psr/log": "^3.0",
         "psr/container": "^2.0",
         "dotink/jin": "^4.0",
         "dotink/slashtrace": "^2.0",
-        "rdlowrey/auryn": "^1.4",
+        "rdlowrey/auryn": "^1.0",
         "defuse/php-encryption": "^2.2"
     },
     "require-dev": {
         "phpstan/phpstan": "^1.0",
-	"phpunit/phpunit": "^8.5"
+        "phpunit/phpunit": "^10.0"
     },
     "autoload": {
         "classmap": ["src/"]
+    },
+    "autoload-dev": {
+        "classmap": ["test/src"]
     },
     "type": "opus-package",
     "extra": {
