@@ -177,7 +177,7 @@ class Application extends AbstractLogger implements ContainerInterface
 				if (is_array($path)) {
 					return array_map(
 						function($directory) {
-							$this->getDirectory($directory, TRUE)->getPathname();
+							return $this->getDirectory($directory, TRUE)->getPathname();
 						},
 						$path
 					);
@@ -194,7 +194,7 @@ class Application extends AbstractLogger implements ContainerInterface
 				if (is_array($path)) {
 					return array_map(
 						function($file) {
-							$this->getDirectory($file)->getPathname();
+							return $this->getDirectory($file)->getPathname();
 						},
 						$path
 					);
