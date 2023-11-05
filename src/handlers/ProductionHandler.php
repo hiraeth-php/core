@@ -62,13 +62,9 @@ class ProductionHandler implements EventHandler
 
 
 	/**
-	 * Exception handler
-	 *
-	 * @access public
-	 * @param Exception $exception The exception to be handled
-	 * @return int
+	 * {@inheritDoc}
 	 */
-	public function handleException($exception)
+	public function handleException(Exception $exception): int
 	{
 		$this->app->error($exception->getMessage(), [
 			'file'    => $exception->getFile(),
@@ -90,63 +86,54 @@ class ProductionHandler implements EventHandler
 			}
 		}
 
-		return 0;
+		return EventHandler::SIGNAL_EXIT;
 	}
 
 
 	/**
-	 * Record a breadcrumb as a debug line entry (in debug mode it's a breadcrumb)
-	 *
-	 * @access public
-	 * @param string $message The message for the breadcrumb
-	 * @param mixed[] $context Additional contextual data that is relevant
-	 * @return void
+	 * {@inheritDoc}
 	 */
-	public function recordBreadcrumb($message, array $context = [])
+	public function recordBreadcrumb(string $message, array $context = []): self
 	{
 		$this->app->debug($message, $context);
+
+		return $this;
 	}
 
 
 	/**
-	 * Set the application path
-	 *
-	 * @access public
-	 * @param string $path The path to the application
-	 * @return void
+	 * {@inheritDoc}
 	 */
-	public function setApplicationPath($path)
+	public function setApplicationPath(string $path): self
 	{
 		$this->path = $path;
+
+		return $this;
 	}
 
 
 	/**
-	 * Set the application release
-	 *
-	 * @access public
-	 * @param string $release The release of the application
-	 * @return void
+	 * {@inheritDoc}
 	 */
-	public function setRelease($release)
+	public function setRelease(string $release): self
 	{
 		$this->release = $release;
+
+		return $this;
 	}
 
 
 	/**
-	 * Set the application information for the user
-	 *
-	 * @access public
-	 * @param User $user The slashtrace user context
-	 * @return void
+	 * {@inheritDoc}
 	 */
-	public function setUser(User $user)
+	public function setUser(User $user): self
 	{
 		$this->user = [
 			'id'    => $user->getId(),
 			'name'  => $user->getName(),
 			'email' => $user->getEmail()
 		];
+
+		return $this;
 	}
 }
