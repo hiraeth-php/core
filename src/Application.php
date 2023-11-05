@@ -168,16 +168,48 @@ class Application extends AbstractLogger implements ContainerInterface
 			'app' => $this
 		], [
 			'env'  => [$this, 'getEnvironment'],
-			'dir'  => function($path) { return $this->getDirectory($path, TRUE)->getPathname(); },
-			'file' => function($path) { return $this->getFile($path)->getPathname(); }
+
+			//
+			// Handle directories
+			//
+
+			'dir'  => function($path) {
+				if (is_array($path)) {
+					return array_map(
+						function($directory) {
+							$this->getDirectory($directory, TRUE)->getPathname();
+						},
+						$path
+					);
+				}
+
+				return $this->getDirectory($path, TRUE)->getPathname();
+			},
+
+			//
+			// Handle files
+			//
+
+			'file' => function($path) {
+				if (is_array($path)) {
+					return array_map(
+						function($file) {
+							$this->getDirectory($file)->getPathname();
+						},
+						$path
+					);
+				}
+
+				return $this->getFile($path)->getPathname();
+			}
 		]);
 
 		$this->broker->share($this);
 		$this->broker->share($this->broker);
 		$this->broker->share($this->parser);
 
-		$this->tracer->prependHandler(new DebuggingHandler($this));
 		$this->tracer->prependHandler(new ProductionHandler($this));
+		$this->tracer->prependHandler(new DebuggingHandler($this));
 		$this->tracer->register();
 
 		if (!$this->hasDirectory($this->root)) {
@@ -225,8 +257,8 @@ class Application extends AbstractLogger implements ContainerInterface
 	 */
 	public function exec(Closure $post_boot = NULL)
 	{
-		ini_set('display_errors', 0);
-		ini_set('display_startup_errors', 0);
+//		ini_set('display_errors', 0);
+//		ini_set('display_startup_errors', 0);
 
 		$bootables    = array();
 		$this->config = new Configuration(

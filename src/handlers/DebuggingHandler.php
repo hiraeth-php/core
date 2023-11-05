@@ -2,7 +2,6 @@
 
 namespace Hiraeth;
 
-use Exception;
 use SlashTrace\EventHandler\DebugHandler;
 use SlashTrace\EventHandler\EventHandler;
 
@@ -35,7 +34,7 @@ class DebuggingHandler extends DebugHandler
 	/**
 	 * {@inheritDoc}
 	 */
-	public function handleException(Exception $exception): int
+	public function handleException($exception): int
 	{
 		if ($this->app->isDebugging()) {
 			return parent::handleException($exception);

@@ -2,7 +2,6 @@
 
 namespace Hiraeth;
 
-use Exception;
 use SlashTrace\Context\User;
 use SlashTrace\EventHandler\EventHandler;
 
@@ -64,7 +63,7 @@ class ProductionHandler implements EventHandler
 	/**
 	 * {@inheritDoc}
 	 */
-	public function handleException(Exception $exception): int
+	public function handleException($exception): int
 	{
 		$this->app->error($exception->getMessage(), [
 			'file'    => $exception->getFile(),
