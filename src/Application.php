@@ -194,7 +194,7 @@ class Application extends AbstractLogger implements ContainerInterface
 				if (is_array($path)) {
 					return array_map(
 						function($file) {
-							return $this->getDirectory($file)->getPathname();
+							return $this->getFile($file)->getPathname();
 						},
 						$path
 					);
@@ -354,7 +354,11 @@ class Application extends AbstractLogger implements ContainerInterface
 			array_map(
 				function($key) {
 					if (!is_numeric($key)) {
-						$key = ':' . $key;
+						if ($key[0] == '-') {
+							$key = substr($key, 1);
+						} else {
+							$key = sprintf(':%s', $key);
+						}
 					}
 
 					return $key;
