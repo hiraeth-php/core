@@ -18,6 +18,7 @@ use Psr\Container\ContainerInterface;
 
 use SlashTrace\SlashTrace;
 use SlashTrace\EventHandler\EventHandler;
+use Stringable;
 
 /**
  * Hiraeth application
@@ -148,6 +149,30 @@ class Application extends AbstractLogger implements ContainerInterface
 	 */
 	protected $tracer = NULL;
 
+
+	/**
+	 * Normalize args, inverting how broker normally handles them
+	 */
+	static protected function args(array $args): array
+	{
+		return array_combine(
+			array_map(
+				function($key) {
+					if (!is_numeric($key)) {
+						if ($key[0] == '-') {
+							$key = substr($key, 1);
+						} else {
+							$key = sprintf(':%s', $key);
+						}
+					}
+
+					return $key;
+				},
+				array_keys($args)
+			),
+			array_values($args)
+		);
+	}
 
 	/**
 	 * Construct the application
@@ -350,25 +375,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 */
 	public function get($alias, $args = array())
 	{
-		$args = array_combine(
-			array_map(
-				function($key) {
-					if (!is_numeric($key)) {
-						if ($key[0] == '-') {
-							$key = substr($key, 1);
-						} else {
-							$key = sprintf(':%s', $key);
-						}
-					}
-
-					return $key;
-				},
-				array_keys($args)
-			),
-			array_values($args)
-		);
-
-		return $this->broker->make($alias, $args);
+		return $this->broker->make($alias, static::args($args));
 	}
 
 
@@ -637,7 +644,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @param mixed[] $context
 	 * @return void
 	 */
-	public function log($level, $message, array $context = array()): void
+	public function log($level, string|Stringable $message, array $context = array()): void
 	{
 		if (isset($this->logger)) {
 			$this->logger->log($level, $message, $context);
@@ -664,7 +671,8 @@ class Application extends AbstractLogger implements ContainerInterface
 	 */
 	public function run($target, array $parameters = array())
 	{
-		return $this->broker->execute($target, $parameters);
+
+		return $this->broker->execute($target, static::args($parameters));
 	}
 
 
