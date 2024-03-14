@@ -10,6 +10,7 @@
         }
     ],
     "require": {
+        "hiraeth/app": "^1.0",
         "vlucas/phpdotenv": "^2.4",
         "rdlowrey/auryn": "^1.4",
         "filp/whoops": "^2.1",
