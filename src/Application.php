@@ -183,6 +183,7 @@ class Application
 		$this->broker->share($this);
 		$this->broker->share($this->broker);
 		$this->broker->share($this->config);
+		$this->broker->alias('Hiraeth\Broker', 'Auryn\Injector');
 
 		foreach ($this->config->get('*', 'application.aliases', array()) as $aliases) {
 			foreach ($aliases as $target => $alias) {
