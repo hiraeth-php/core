@@ -14,9 +14,14 @@
         "vlucas/phpdotenv": "^2.4",
         "rdlowrey/auryn": "^1.4",
         "filp/whoops": "^2.1",
-        "dotink/jin": "^1.2"
+        "dotink/jin": "^2.0"
     },
     "autoload": {
         "classmap": ["src/"]
+    },
+    "config": {
+        "allow-plugins": {
+            "imarc/opus": true
+        }
     }
 }

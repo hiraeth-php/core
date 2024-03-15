@@ -3,7 +3,6 @@
 namespace Hiraeth;
 
 use Dotink\Jin;
-use Dotink\Flourish\Collection;
 use RuntimeException;
 
 /**
