@@ -1,5 +1,6 @@
 <?php
-namespace Hireath;
+
+namespace Hiraeth;
 
 class NotFoundException extends \Exception {
 
