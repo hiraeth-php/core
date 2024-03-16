@@ -42,14 +42,6 @@
             }
         }
     },
-    "type": "opus-package",
-    "extra": {
-        "opus": {
-            "hiraeth/app": {
-                "public": ""
-            }
-        }
-    },
     "config": {
         "allow-plugins": {
             "imarc/opus": true
