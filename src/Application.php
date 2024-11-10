@@ -42,6 +42,10 @@ class Application extends AbstractLogger implements ContainerInterface
 	 */
 	const REGEX_ABS_PATH = '#^(/|[a-z]+://).*$#';
 
+	const DEF_CLASS = 'class';
+	const DEF_TRAIT = 'trait';
+	const DEF_IFACE = 'interface';
+
 
 	/**
 	 * A list of interface and/or class aliases
@@ -695,5 +699,23 @@ class Application extends AbstractLogger implements ContainerInterface
 		$this->broker->share($instance);
 
 		return $instance;
+	}
+
+	/**
+	 * @param class-string $class
+	 */
+	public function void(string $class, string $type)
+	{
+		$parts = explode('\\', $class);
+		$name  = array_pop($parts);
+
+		eval(sprintf(
+			'%s %s %s{}',
+			count($parts)
+				? sprintf('namespace %s;', implode('\\', $parts))
+				: null,
+			$type,
+			$name
+		));
 	}
 }
