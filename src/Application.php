@@ -53,7 +53,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @access protected
 	 * @var array<string, string>
 	 */
-	protected $aliases = array();
+	protected $aliases = [];
 
 
 	/**
@@ -80,7 +80,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @access protected
 	 * @var array<string, string>
 	 */
-	protected $environment = array();
+	protected $environment = [];
 
 
 	/**
@@ -156,6 +156,9 @@ class Application extends AbstractLogger implements ContainerInterface
 
 	/**
 	 * Normalize args, inverting how broker normally handles them
+	 *
+	 * @param array<string, mixed> $args
+	 * @return array<string, mixed>
 	 */
 	static protected function args(array $args): array
 	{
@@ -196,7 +199,7 @@ class Application extends AbstractLogger implements ContainerInterface
 		$this->parser = new Jin\Parser([
 			'app' => $this
 		], [
-			'env'  => [$this, 'getEnvironment'],
+			'env'  => $this->getEnvironment(...),
 
 			//
 			// Handle directories
@@ -205,9 +208,7 @@ class Application extends AbstractLogger implements ContainerInterface
 			'dir'  => function($path) {
 				if (is_array($path)) {
 					return array_map(
-						function($directory) {
-							return $this->getDirectory($directory, TRUE)->getPathname();
-						},
+						fn($directory) => $this->getDirectory($directory, TRUE)->getPathname(),
 						$path
 					);
 				}
@@ -222,9 +223,7 @@ class Application extends AbstractLogger implements ContainerInterface
 			'file' => function($path) {
 				if (is_array($path)) {
 					return array_map(
-						function($file) {
-							return $this->getFile($file)->getPathname();
-						},
+						fn($file) => $this->getFile($file)->getPathname(),
 						$path
 					);
 				}
@@ -259,9 +258,9 @@ class Application extends AbstractLogger implements ContainerInterface
 		}
 
 		if ($this->hasFile($env_file)) {
-			$this->environment = $_ENV = $_ENV + $this->parser
+			$this->environment = ($_ENV += $this->parser
 				->parse(file_get_contents($this->getFile($env_file)) ?: '')
-				->flatten('_');
+				->flatten('_'));
 
 			foreach ($this->environment as $name => $value) {
 				@putenv(sprintf('%s=%s', $name, $value));
@@ -284,12 +283,12 @@ class Application extends AbstractLogger implements ContainerInterface
 	/**
 	 * @return void
 	 */
-	public function exec(Closure $post_boot = NULL)
+	public function exec(?Closure $post_boot = NULL)
 	{
 //		ini_set('display_errors', 0);
 //		ini_set('display_startup_errors', 0);
 
-		$bootables    = array();
+		$bootables    = [];
 		$this->config = new Configuration(
 			$this->parser,
 			$this->getEnvironment('CACHING', TRUE)
@@ -302,7 +301,7 @@ class Application extends AbstractLogger implements ContainerInterface
 			$this->getEnvironment('CONFIG_SRC', NULL)
 		);
 
-		foreach ($this->getConfig('*', 'application.aliases', array()) as $aliases) {
+		foreach ($this->getConfig('*', 'application.aliases', []) as $aliases) {
 			foreach ($aliases as $interface => $target) {
 				if (!interface_exists($interface) && !class_exists($interface)) {
 					class_alias($target, $interface);
@@ -312,7 +311,7 @@ class Application extends AbstractLogger implements ContainerInterface
 			}
 		}
 
-		foreach ($this->getConfig('*', 'application.delegates', array()) as $delegates) {
+		foreach ($this->getConfig('*', 'application.delegates', []) as $delegates) {
 			foreach ($delegates as $delegate) {
 				if (!isset(class_implements($delegate)[Delegate::class])) {
 					throw new RuntimeException(sprintf(
@@ -325,7 +324,7 @@ class Application extends AbstractLogger implements ContainerInterface
 			}
 		}
 
-		foreach ($this->getConfig('*', 'application.providers', array()) as $providers) {
+		foreach ($this->getConfig('*', 'application.providers', []) as $providers) {
 			foreach ($providers as $provider) {
 				if (!isset(class_implements($provider)[Provider::class])) {
 					throw new RuntimeException(sprintf(
@@ -335,14 +334,12 @@ class Application extends AbstractLogger implements ContainerInterface
 				}
 
 				foreach ($provider::getInterfaces() as $interface) {
-					if ($interface == __CLASS__) {
+					if ($interface == self::class) {
 						$bootables[] = $provider;
 						continue;
 					}
 
-					$this->broker->prepare($interface, function($obj, Broker $broker) use ($provider) {
-						return $broker->execute($provider, [$obj]);
-					});
+					$this->broker->prepare($interface, fn($obj, Broker $broker) => $broker->execute($provider, [$obj]));
 				}
 			}
 		}
@@ -377,7 +374,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @param string $alias The alias of the dependency to make (class name or interface name usually)
 	 * @param array<string, mixed> $args Optional named constructor arguments
 	 */
-	public function get($alias, $args = array())
+	public function get($alias, $args = [])
 	{
 		return $this->broker->make($alias, static::args($args));
 	}
@@ -409,7 +406,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	public function getConfig(string $path, string $key, $default = NULL)
 	{
 		if ($path == '*') {
-			$value = array();
+			$value = [];
 
 			foreach ($this->config->getCollectionPaths() as $path) {
 				if (!$this->config->getCollection($path)->has($key)) {
@@ -427,7 +424,7 @@ class Application extends AbstractLogger implements ContainerInterface
 			}
 
 			if (is_array($default)) {
-				$value = $value + $default;
+				$value += $default;
 			}
 
 		}
@@ -444,7 +441,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @param bool $create Whether or not the directory should be created if it does not exist
 	 * @return SplFileInfo An SplFileInfo object referencing the directory
 	 */
-	public function getDirectory(string $path = NULL, bool $create = FALSE): SplFileInfo
+	public function getDirectory(?string $path = NULL, bool $create = FALSE): SplFileInfo
 	{
 		if (!$path || !preg_match(static::REGEX_ABS_PATH, $path)) {
 			$path = $this->root . DIRECTORY_SEPARATOR . $path;
@@ -479,7 +476,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @param mixed $default The default data, should the data not exist in the environment
 	 * @return mixed The value as retrieved from the environment, or default
 	 */
-	public function getEnvironment(string $name = NULL, $default = NULL)
+	public function getEnvironment(?string $name = NULL, mixed $default = NULL): mixed
 	{
 		if (array_key_exists($name, $this->environment)) {
 			$value = $this->environment[$name];
@@ -492,7 +489,7 @@ class Application extends AbstractLogger implements ContainerInterface
 		}
 
 		if (is_array($default)) {
-			$value = $value + $default;
+			$value += $default;
 		}
 
 		return $value;
@@ -571,7 +568,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @param mixed $default The default value if that data cannot be found
 	 * @return mixed The release data stored in the .release file
 	 */
-	public function getRelease(string $name = NULL, $default = NULL)
+	public function getRelease(?string $name = NULL, $default = NULL)
 	{
 		return $this->release->get($name, $default);
 	}
@@ -648,7 +645,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @param mixed[] $context
 	 * @return void
 	 */
-	public function log($level, string|Stringable $message, array $context = array()): void
+	public function log($level, string|Stringable $message, array $context = []): void
 	{
 		if (isset($this->logger)) {
 			$this->logger->log($level, $message, $context);
@@ -660,7 +657,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @param string $message
 	 * @param mixed[] $context
 	 */
-	public function record(string $message, array $context = array()): Application
+	public function record(string $message, array $context = []): Application
 	{
 		$this->tracer->recordBreadcrumb($message, $context);
 
@@ -673,7 +670,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * @param array<string, mixed> $parameters A list of name parameters for the callable
 	 * @return mixed The return result of executing the target
 	 */
-	public function run($target, array $parameters = array())
+	public function run($target, array $parameters = [])
 	{
 
 		return $this->broker->execute($target, static::args($parameters));
@@ -704,7 +701,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	/**
 	 * @param class-string $class
 	 */
-	public function void(string $class, string $type)
+	public function void(string $class, string $type): void
 	{
 		$parts = explode('\\', $class);
 		$name  = array_pop($parts);

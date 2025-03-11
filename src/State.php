@@ -20,7 +20,7 @@ class State
 	 *
 	 * @var array<string, callable>
 	 */
-	protected $_methods = array();
+	protected $_methods = [];
 
 
 	/**

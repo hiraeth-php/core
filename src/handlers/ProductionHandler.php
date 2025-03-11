@@ -44,7 +44,7 @@ class ProductionHandler implements EventHandler
 	 *
 	 * @var mixed[] Application user information
 	 */
-	protected $user = array();
+	protected $user = [];
 
 
 	/**

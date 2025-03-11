@@ -20,7 +20,7 @@ class Configuration
 	/**
 	 * @var array<string, Jin\Collection>
 	 */
-	protected $collections = array();
+	protected $collections = [];
 
 
 	/**
@@ -38,7 +38,7 @@ class Configuration
 	/**
 	 *
 	 */
-	public function __construct(Jin\Parser $parser, SplFileInfo $cache_dir = NULL)
+	public function __construct(Jin\Parser $parser, ?SplFileInfo $cache_dir = NULL)
 	{
 		$this->parser   = $parser;
 		$this->cacheDir = $cache_dir;
@@ -65,9 +65,7 @@ class Configuration
 	 */
 	public function getCollection($path): ?Jin\Collection
 	{
-		return isset($this->collections[$path])
-			? $this->collections[$path]
-			: NULL;
+		return $this->collections[$path] ?? NULL;
 	}
 
 
@@ -85,7 +83,7 @@ class Configuration
 	 * @param string $source
 	 * @return self
 	 */
-	public function load($directory, string $source = NULL)
+	public function load($directory, ?string $source = NULL)
 	{
 		$cache_hash = md5($directory);
 		$cache_path = $this->cacheDir
