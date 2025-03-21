@@ -390,7 +390,17 @@ class Application extends AbstractLogger implements ContainerInterface
 	 */
 	public function getAllConfigs(string $key, $default = NULL): array
 	{
-		return $this->getConfig('*', $key, $default);
+		$value = [];
+
+		foreach ($this->config->getCollectionPaths() as $path) {
+			if (!$this->config->getCollection($path)->has($key)) {
+				continue;
+			}
+
+			$value[$path] = $this->getConfig($path, $key, $default);
+		}
+
+		return $value;
 	}
 
 
@@ -406,15 +416,17 @@ class Application extends AbstractLogger implements ContainerInterface
 	public function getConfig(string $path, string $key, $default = NULL)
 	{
 		if ($path == '*') {
-			$value = [];
+			$value = $this->getAllConfigs($key, $default);
 
-			foreach ($this->config->getCollectionPaths() as $path) {
-				if (!$this->config->getCollection($path)->has($key)) {
-					continue;
-				}
+		} elseif ($path == '~') {
+			$value = $this->getAllConfigs($key, []);
 
-				$value[$path] = $this->getConfig($path, $key, $default);
+			if (count($value)) {
+				$value = array_replace_recursive(...array_reverse(array_values($value))) + $default;
 			}
+
+		} elseif ($path == '+') {
+			$value = array_sum($this->getAllConfigs($key, $default));
 
 		} else {
 			$value = $this->config->get($path, $key, $default);
