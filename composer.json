@@ -38,9 +38,6 @@
     },
     "type": "opus-package",
     "extra": {
-	"branch-alias": {
-		"dev-master": "3.0-dev"
-	},
         "opus": {
             "hiraeth/app": {
                 "config": ""
