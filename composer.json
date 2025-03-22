@@ -17,8 +17,8 @@
         "psr/log": "^3.0",
         "psr/container": "^2.0",
         "dotink/jin": "^5.0",
-        "dotink/slashtrace": "^2.0",
         "dotink/auryn": "dev-master",
+        "dotink/slashtrace": "^3.0",
         "defuse/php-encryption": "^2.2"
     },
     "require-dev": {
