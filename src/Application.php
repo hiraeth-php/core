@@ -10,14 +10,12 @@ use Dotink\Jin;
 
 use Defuse\Crypto\Key;
 
-use Composer\Autoload\ClassLoader;
 use Psr\Log\LoggerInterface;
 use Psr\Log\AbstractLogger;
 use Psr\Container\ContainerInterface;
 
 
 use SlashTrace\SlashTrace;
-use SlashTrace\EventHandler\EventHandler;
 use Stringable;
 
 /**
