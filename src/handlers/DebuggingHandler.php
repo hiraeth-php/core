@@ -39,7 +39,6 @@ class DebuggingHandler extends DebugHandler
 		if ($this->app->isDebugging()) {
 			header('HX-Reswap: innerHTML', TRUE, 200);
 			header('HX-Retarget: body');
-			header('HX-Reselect: body');
 
 			return parent::handleException($exception);
 		}
