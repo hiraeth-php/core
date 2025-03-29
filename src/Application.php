@@ -164,7 +164,7 @@ class Application extends AbstractLogger implements ContainerInterface
 			array_map(
 				function($key) {
 					if (!is_numeric($key)) {
-						if ($key[0] == '-') {
+						if (in_array($key[0], [':', '-'])) {
 							$key = substr($key, 1);
 						} else {
 							$key = sprintf(':%s', $key);
