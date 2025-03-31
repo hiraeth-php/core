@@ -12,7 +12,15 @@ class State
 	 *
 	 * @var Application|null
 	 */
-	protected $_app = NULL;
+	private $app = NULL;
+
+
+	/**
+	 * A collection of stored data in the state
+	 *
+	 * @var array<string, mixed>
+	 */
+	private $data = [];
 
 
 	/**
@@ -20,7 +28,7 @@ class State
 	 *
 	 * @var array<string, callable>
 	 */
-	protected $_methods = [];
+	private $methods = [];
 
 
 	/**
@@ -28,7 +36,36 @@ class State
 	 */
 	public function __construct(Application $app)
 	{
-		$this->_app = $app;
+		$this->app = $app;
+	}
+
+
+	/**
+	 * @param string $method The name of the method to call
+	 * @param mixed $args The arguments passed to the method
+	 * @return mixed
+	 */
+	public function __call($method, $args) {
+		$method = strtolower($method);
+
+		if (!isset($this->methods[$method])) {
+			throw new RuntimeException(sprintf(
+				'No registered callable at "%s"',
+				$method
+			));
+		}
+
+		return $this->methods[$method](...$args);
+	}
+
+
+	/**
+	 * @param string $name The name of the property to get
+	 * @return mixed
+	 */
+	public function __get($name)
+	{
+		return $this->data[$name] ?? NULL;
 	}
 
 
@@ -41,33 +78,17 @@ class State
 	{
 		if (is_callable($value)) {
 			if ($value instanceof Closure) {
-				$this->_methods[strtolower($name)] = Closure::bind($value, $this->_app);
+				$this->methods[strtolower($name)] = Closure::bind($value, $this->app);
 			} else {
-				$this->_methods[strtolower($name)] = $value;
+				$this->methods[strtolower($name)] = $value;
 			}
 
 		} else {
-			$this->$value = $value;
+			$this->data[$name] = $value;
 
 		}
 	}
 
 
-	/**
-	 * @param string $method The name of the method to call
-	 * @param mixed $args The arguments passed to the method
-	 * @return mixed
-	 */
-	public function __call($method, $args) {
-		$method = strtolower($method);
 
-		if (!isset($this->_methods[$method])) {
-			throw new RuntimeException(sprintf(
-				'No registered callable at "%s"',
-				$method
-			));
-		}
-
-		return $this->_methods[$method](...$args);
-	}
 }
