@@ -256,9 +256,13 @@ class Application extends AbstractLogger implements ContainerInterface
 		}
 
 		if ($this->hasFile($env_file)) {
-			$this->environment = ($_ENV += $this->parser
-				->parse(file_get_contents($this->getFile($env_file)) ?: '')
-				->flatten('_'));
+			$this->environment = array_replace(
+				$this->parser
+					->parse(file_get_contents($this->getFile($env_file)) ?: '')
+					->flatten('_'),
+				$_SERVER,
+				$_ENV,
+			);
 
 			foreach ($this->environment as $name => $value) {
 				@putenv(sprintf('%s=%s', $name, $value));
@@ -482,12 +486,16 @@ class Application extends AbstractLogger implements ContainerInterface
 	 * array.
 	 *
 	 * @access public
-	 * @param string $name The name of the environment variable
+	 * @param ?string $name The name of the environment variable
 	 * @param mixed $default The default data, should the data not exist in the environment
 	 * @return mixed The value as retrieved from the environment, or default
 	 */
 	public function getEnvironment(?string $name = NULL, mixed $default = NULL): mixed
 	{
+		if (is_null($name)) {
+			return $this->environment;
+		}
+
 		if (array_key_exists($name, $this->environment)) {
 			$value = $this->environment[$name];
 		} else {
