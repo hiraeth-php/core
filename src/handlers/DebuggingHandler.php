@@ -37,8 +37,10 @@ class DebuggingHandler extends DebugHandler
 	public function handleException($exception): int
 	{
 		if ($this->app->isDebugging()) {
-			header('HX-Reswap: innerHTML', TRUE, 500);
-			header('HX-Retarget: body');
+			if (!$this->app->isCLI()) {
+				header('HX-Reswap: innerHTML', TRUE, 500);
+				header('HX-Retarget: body');
+			}
 
 			return parent::handleException($exception);
 		}
