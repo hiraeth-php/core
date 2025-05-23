@@ -290,6 +290,8 @@ class Application extends AbstractLogger implements ContainerInterface
 //		ini_set('display_errors', 0);
 //		ini_set('display_startup_errors', 0);
 
+		chdir($this->root);
+
 		$bootables    = [];
 		$this->config = new Configuration(
 			$this->parser,
