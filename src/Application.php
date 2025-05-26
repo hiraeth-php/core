@@ -255,6 +255,8 @@ class Application extends AbstractLogger implements ContainerInterface
 
 		}
 
+		chdir($this->root);
+
 		if ($this->hasFile($env_file)) {
 			$this->environment = array_replace(
 				$this->parser
@@ -271,6 +273,18 @@ class Application extends AbstractLogger implements ContainerInterface
 
 		umask($this->getEnvironment('UMASK', 0002));
 		date_default_timezone_set($this->getEnvironment('TIMEZONE', 'UTC'));
+
+		$this->config = new Configuration(
+			$this->parser,
+			$this->getEnvironment('CACHING', TRUE)
+				? $this->getDirectory('storage/cache', TRUE)
+				: NULL
+		);
+
+		$this->config->load(
+			$this->getEnvironment('CONFIG_DIR', $this->getDirectory('config')),
+			$this->getEnvironment('CONFIG_SRC', NULL)
+		);
 	}
 
 
@@ -287,23 +301,7 @@ class Application extends AbstractLogger implements ContainerInterface
 	 */
 	public function exec(?Closure $post_boot = NULL)
 	{
-//		ini_set('display_errors', 0);
-//		ini_set('display_startup_errors', 0);
-
-		chdir($this->root);
-
-		$bootables    = [];
-		$this->config = new Configuration(
-			$this->parser,
-			$this->getEnvironment('CACHING', TRUE)
-				? $this->getDirectory('storage/cache', TRUE)
-				: NULL
-		);
-
-		$this->config->load(
-			$this->getEnvironment('CONFIG_DIR', $this->getDirectory('config')),
-			$this->getEnvironment('CONFIG_SRC', NULL)
-		);
+		$bootables = [];
 
 		foreach ($this->getConfig('*', 'application.aliases', []) as $aliases) {
 			foreach ($aliases as $interface => $target) {
